@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+    <title>Document</title>
+</head>
+<body>
+    
+
+
+    <table class="table mt-3">
+        <thead>
+          <tr>
+            <th scope="col">#</th>
+            <th scope="col">NAME</th>
+            <th scope="col">AGE</th>
+            <th scope="col">Email</th>
+            <th scope="col"></th>
+            <th scope="col"></th>
+            <th scope="col"></th>
+          </tr>
+        </thead>
+        <tbody>
+        </tbody>
+      </table>
+
+<button id="add-row"  class="btn btn-success" >add row</button>
+
+
+<script>
+
+
+var body = document.getElementsByTagName("tbody")[0];
+
+ fetch('http://127.0.0.1:4000/users' , {mode: 'cors'})
+.then(response => response.text())
+.then((data) =>{
+
+  // show all data
+
+    rows = JSON.parse(data);
+    for (row in rows){
+      body.innerHTML += `<tr>
+      <th scope="row">${+row + 1}</th>
+      <td><input type="text" disabled="disabled" value=${rows[row].name}></td>
+      <td><input type="text" disabled="disabled" value=${rows[row].age}></td>
+      <td><input type="text" disabled="disabled" value=${rows[row].email}></td>
+      <td><button class="esave btn btn-primary" hidden id="${rows[row].id}"> SAVE </button></td>
+      <td><button class="edit btn btn-warning" id="${rows[row].id}"> EDIT </button></td>
+      <td><button class="delete btn btn-danger" id="${rows[row].id}"> DELETE </button></td>
+      </tr>`
+    }
+
+
+// ##################################################################################
+    
+    var delButton =  [...document.getElementsByClassName('delete')] ;
+
+    delButton.forEach(el => {
+      el.onclick = () => {
+
+       el.parentElement.parentElement.remove()  // delete a row from frontend
+       
+       fetch(`http://127.0.0.1:4000/users/${el.id}`, {method: 'DELETE'}) // delete a row from database
+      
+      }
+    });
+  
+
+
+// ##################################################################################
+    
+
+    // adding new row 
+
+    var addRow  =document.getElementById("add-row")
+
+    addRow.onclick = (el) =>{
+
+      el.target.setAttribute("disabled", "disabled")
+
+      body.innerHTML += `<tr>
+      <th scope="row"></th>
+      <th scope="row"><input id="name" type="text"></th>
+      <th scope="row"><input id="age" type="text"></th>
+      <th scope="row"><input id="email" type="text"></th>
+      <td><button class="btn btn-primary" id="save" > SAVE </button></td>
+      </tr>`
+      
+      
+      
+      var save = document.getElementById("save");
+    
+      save.onclick = () =>{
+
+      location.reload();
+
+      var name = document.getElementById("name").value;
+      var age = document.getElementById("age").value;
+      var email = document.getElementById("email").value;
+
+
+// ##################################################################################
+    
+        // posting data to database 
+
+      fetch("http://127.0.0.1:4000/users", { method: "POST",
+                                            body: JSON.stringify({    name: `${name}`    ,    age: `${age}`   ,   email: `${email}`}),
+                                            headers: {"Content-type": "application/json; charset=UTF-8"}
+                                            }
+        );
+      }
+    }
+    
+    
+
+// ##################################################################################
+    
+
+    //         modify      put method
+
+    editButton =[...document.getElementsByClassName("edit") ];
+    saveAfterEdit = [...document.getElementsByClassName("esave")];
+
+
+    editButton.forEach(el => {
+      el.onclick = (x) => {
+        x.target.setAttribute("hidden", "true");
+        el.parentElement.parentElement.children[1].children[0].removeAttribute("disabled")
+        el.parentElement.parentElement.children[2].children[0].removeAttribute("disabled")
+        el.parentElement.parentElement.children[3].children[0].removeAttribute("disabled")
+        el.parentElement.parentElement.children[4].children[0].removeAttribute("hidden")
+      }
+    });
+
+
+
+    saveAfterEdit.forEach(el => {
+      el.onclick = (x) => {
+        x.target.setAttribute("hidden", "true");
+        el.parentElement.parentElement.children[1].children[0].setAttribute("disabled", "true")
+        el.parentElement.parentElement.children[2].children[0].setAttribute("disabled", "true")
+        el.parentElement.parentElement.children[3].children[0].setAttribute("disabled", "true")
+        el.parentElement.parentElement.children[5].children[0].removeAttribute("hidden")
+
+
+
+
+        fetch(`http://127.0.0.1:4000/users/${x.target.id}`, { method: "PUT",
+                                            body: JSON.stringify({    name: `${el.parentElement.parentElement.children[1].children[0].value}`    ,
+                                                                      age: `${el.parentElement.parentElement.children[2].children[0].value}`   ,
+                                                                      email: `${el.parentElement.parentElement.children[3].children[0].value}`}),
+                                            headers: {"Content-type": "application/json; charset=UTF-8"}
+                                            }
+        );
+      }
+    });
+  }
+);
+    
+
+
+
+
+
+</script>
+
+</body>
+</html>
